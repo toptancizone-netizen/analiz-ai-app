@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "4300328367",
+    "project_id": "analizai",
+    "storage_bucket": "analizai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:4300328367:android:c38395685f42170a55335a",
+        "android_client_info": {
+          "package_name": "com.company"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCN-yQBxqrbkgQggvIX3yptx3DuY2EkwDg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

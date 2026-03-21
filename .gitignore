@@ -1,15 +1,23 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea/
+.idea/
 .DS_Store
 /build
 /captures
 .externalNativeBuild
 .cxx
 local.properties
+node_modules/
+package-lock.json
+
+# Flutter
+flutter_app/.dart_tool/
+flutter_app/build/
+flutter_app/.packages
+flutter_app/.flutter-plugins
+flutter_app/.flutter-plugins-dependencies
+
+# Backend
+backend/target/
