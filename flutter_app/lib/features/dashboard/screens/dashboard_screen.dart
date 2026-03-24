@@ -3,6 +3,10 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/login_screen.dart';
+import '../../yorum_analizi/screens/yorum_analizi_screen.dart';
+import '../../rakip_analizi/screens/rakip_analizi_screen.dart';
+import '../../fiyat_analizi/screens/fiyat_analizi_screen.dart';
+import '../../kampanya/screens/kampanya_onerileri_screen.dart';
 import '../providers/dashboard_provider.dart';
 
 /// Dashboard Ekranı — Ana Sayfa
@@ -40,17 +44,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 0:
         return _buildDashboardHome();
       case 1:
-        return _buildPlaceholder('Yorum Analizi', Icons.comment_rounded,
-            'Hugging Face AI ile yorum analizi');
+        return const YorumAnaliziScreen();
       case 2:
-        return _buildPlaceholder('Rakip Analizi', Icons.storefront_rounded,
-            'Nominatim ile rakip bulma');
+        return const RakipAnaliziScreen();
       case 3:
-        return _buildPlaceholder('Fiyat Analizi', Icons.attach_money_rounded,
-            'Tesseract OCR ile menü okuma');
+        return const FiyatAnaliziScreen();
       case 4:
-        return _buildPlaceholder('Kampanyalar', Icons.campaign_rounded,
-            'Hugging Face ile kampanya önerisi');
+        return const KampanyaOnerileriScreen();
       default:
         return _buildDashboardHome();
     }
@@ -351,61 +351,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // ─── Placeholder ekranlar (sonra geliştirilecek) ───
-  Widget _buildPlaceholder(String title, IconData icon, String apiInfo) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              gradient: AppTheme.primaryGradient,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(icon, size: 40, color: Colors.white),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            title,
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            apiInfo,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14,
-              color: Colors.white.withOpacity(0.5),
-            ),
-          ),
-          const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppTheme.darkCard,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
-            ),
-            child: const Text(
-              'Yakında aktif olacak ✨',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                color: Colors.white70,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   // ─── Bottom Navigation ───
   Widget _buildBottomNav() {
