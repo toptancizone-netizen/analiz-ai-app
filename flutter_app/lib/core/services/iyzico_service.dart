@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../constants/api_constants.dart';
+import '../constants/api_constants.dart';
 
 /// İyzico Ödeme Servisi
 /// Kullanıldığı ekranlar: Abonelik, Ödeme, Plan Seçimi

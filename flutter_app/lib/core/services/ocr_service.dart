@@ -1,11 +1,10 @@
-import '../../constants/api_constants.dart';
-
-/// Tesseract OCR Servisi
+/// OCR Servisi (Web-Safe)
 /// Kullanıldığı ekranlar: Fiyat Analizi
 ///
-/// Menü fotoğrafından fiyatları otomatik okur.
-/// flutter_tesseract_ocr paketi kullanır (lokal, sunucuya veri gönderilmez).
+/// Web'de: Regex ile fiyat ayıklama
+/// Mobile'da: Tesseract entegrasyonu (gelecek sürüm)
 class OcrService {
+  static const String _tesseractLanguage = 'tur';
   static final OcrService _instance = OcrService._();
   factory OcrService() => _instance;
   OcrService._();
@@ -24,9 +23,9 @@ class OcrService {
 
       return {
         'success': true,
-        'text': '', // OCR sonucu
-        'language': ApiConstants.tesseractLanguage,
-        'prices': <Map<String, dynamic>>[], // Çıkarılan fiyatlar
+        'text': '',
+        'language': _tesseractLanguage,
+        'prices': <Map<String, dynamic>>[],
       };
     } catch (e) {
       return {

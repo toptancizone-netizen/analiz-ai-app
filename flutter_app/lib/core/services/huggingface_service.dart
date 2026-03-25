@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../constants/api_constants.dart';
+import '../constants/api_constants.dart';
 
 /// Hugging Face Inference API Servisi
 /// Kullanıldığı ekranlar: Yorum Analizi, Fiyat Önerisi, Kampanya Önerileri

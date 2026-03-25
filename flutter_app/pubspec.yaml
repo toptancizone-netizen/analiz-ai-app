@@ -21,8 +21,8 @@ dependencies:
   # ═══ HTTP — API çağrıları (Nominatim, Hugging Face, İyzico) ═══
   http: ^1.2.2
 
-  # ═══ OCR — Menü fotoğrafından fiyat okuma ═══
-  flutter_tesseract_ocr: ^0.4.23
+  # ═══ OCR — Fiyat regex ayıklama (web-safe, mobile için platform guard eklenecek) ═══
+  # flutter_tesseract_ocr: sadece Android/iOS — web desteklenmiyor
 
   # ═══ State Management ═══
   provider: ^6.1.2

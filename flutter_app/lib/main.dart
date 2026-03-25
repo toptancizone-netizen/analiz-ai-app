@@ -11,16 +11,22 @@ import 'features/dashboard/providers/dashboard_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Firebase başlat
-  await Firebase.initializeApp(
-    options: const FirebaseOptions(
-      apiKey: ApiConstants.firebaseApiKey,
-      projectId: ApiConstants.firebaseProjectId,
-      appId: ApiConstants.firebaseAppId,
-      messagingSenderId: ApiConstants.firebaseMessagingSenderId,
-      storageBucket: ApiConstants.firebaseStorageBucket,
-    ),
-  );
+  // Firebase başlat (hata durumunda uygulamayı yine de çalıştır)
+  try {
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: ApiConstants.firebaseApiKey,
+        authDomain: 'analizai.firebaseapp.com',
+        projectId: ApiConstants.firebaseProjectId,
+        appId: ApiConstants.firebaseAppId,
+        messagingSenderId: ApiConstants.firebaseMessagingSenderId,
+        storageBucket: ApiConstants.firebaseStorageBucket,
+      ),
+    );
+  } catch (e) {
+    // Firebase zaten başlatıldıysa veya web SDK eksikse devam et
+    debugPrint('Firebase init warning: $e');
+  }
 
   runApp(const AnalizAIApp());
 }
