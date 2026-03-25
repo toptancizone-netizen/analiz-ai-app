@@ -4,8 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../dashboard/screens/dashboard_screen.dart';
 
-/// Giriş Ekranı — Firebase Google Sign-In
-/// Kullanılan API: Firebase Authentication
+/// Giriş Ekranı — Firebase Google Sign-In + Demo Mod
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -35,7 +34,6 @@ class _LoginScreenState extends State<LoginScreen>
     ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
 
-    // Eğer kullanıcı zaten giriş yapmışsa, Dashboard'a yönlendir
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       if (auth.isLoggedIn) {
@@ -69,9 +67,128 @@ class _LoginScreenState extends State<LoginScreen>
           backgroundColor: AppTheme.accentColor,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          action: SnackBarAction(
+            label: 'Demo Giriş',
+            textColor: Colors.white,
+            onPressed: _showDemoLoginDialog,
+          ),
         ),
       );
     }
+  }
+
+  void _showDemoLoginDialog() {
+    final nameController = TextEditingController(text: 'Demo İşletme');
+    String selectedType = 'restoran';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return AlertDialog(
+            backgroundColor: AppTheme.darkCard,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text(
+              'Demo Giriş',
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Firebase yapılandırması tamamlanana kadar demo mod ile devam edin.',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.6),
+                    fontFamily: 'Inter',
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: nameController,
+                  style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+                  decoration: InputDecoration(
+                    labelText: 'İşletme Adı',
+                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                    prefixIcon: const Icon(Icons.store, color: AppTheme.secondaryColor),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppTheme.darkBorder),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppTheme.primaryColor),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedType,
+                  dropdownColor: AppTheme.darkCard,
+                  style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+                  decoration: InputDecoration(
+                    labelText: 'İşletme Türü',
+                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                    prefixIcon: const Icon(Icons.category, color: AppTheme.secondaryColor),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppTheme.darkBorder),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppTheme.primaryColor),
+                    ),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'restoran', child: Text('🍽️ Restoran')),
+                    DropdownMenuItem(value: 'kafe', child: Text('☕ Kafe')),
+                    DropdownMenuItem(value: 'market', child: Text('🛒 Market')),
+                    DropdownMenuItem(value: 'kuafor', child: Text('💇 Kuaför')),
+                    DropdownMenuItem(value: 'eczane', child: Text('💊 Eczane')),
+                    DropdownMenuItem(value: 'diger', child: Text('🏪 Diğer')),
+                  ],
+                  onChanged: (val) => setDialogState(() => selectedType = val ?? 'restoran'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  'İptal',
+                  style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  final auth = context.read<AuthProvider>();
+                  final success = await auth.signInAsDemo(
+                    nameController.text,
+                    selectedType,
+                  );
+                  if (success && mounted) {
+                    _navigateToDashboard();
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Giriş Yap', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -102,18 +219,17 @@ class _LoginScreenState extends State<LoginScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Spacer(flex: 2),
-                    // ─── Logo ve Başlık ───
                     _buildLogo(),
                     const SizedBox(height: 16),
                     _buildTitle(),
                     const SizedBox(height: 8),
                     _buildSubtitle(),
                     const Spacer(flex: 2),
-                    // ─── Özellik Kartları ───
                     _buildFeatureChips(),
                     const SizedBox(height: 48),
-                    // ─── Google ile Giriş Butonu ───
                     _buildGoogleSignInButton(),
+                    const SizedBox(height: 12),
+                    _buildDemoButton(),
                     const SizedBox(height: 16),
                     _buildTermsText(),
                     const Spacer(flex: 1),
@@ -251,7 +367,6 @@ class _LoginScreenState extends State<LoginScreen>
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Google logosu
                       Container(
                         width: 24,
                         height: 24,
@@ -275,6 +390,36 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                     ],
                   ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDemoButton() {
+    return Consumer<AuthProvider>(
+      builder: (context, auth, _) {
+        return SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: OutlinedButton.icon(
+            onPressed: auth.isLoading ? null : _showDemoLoginDialog,
+            icon: const Icon(Icons.rocket_launch_rounded, size: 18),
+            label: const Text(
+              'Demo ile Keşfet',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.secondaryColor,
+              side: BorderSide(color: AppTheme.secondaryColor.withOpacity(0.4)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
           ),
         );
       },

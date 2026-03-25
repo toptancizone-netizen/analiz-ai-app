@@ -1,34 +1,45 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 /// Firebase Authentication Provider
-/// Google Sign-In ile giriş/çıkış yönetimi
+/// Google Sign-In ile giriş/çıkış yönetimi + Demo mod (web geliştirme için)
 class AuthProvider extends ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
-
   User? _user;
   bool _isLoading = false;
   String? _error;
+  bool _isDemoMode = false;
+
+  // Demo kullanıcı bilgileri
+  String _demoName = '';
+  String _demoEmail = '';
 
   User? get user => _user;
   bool get isLoading => _isLoading;
-  bool get isLoggedIn => _user != null;
+  bool get isLoggedIn => _user != null || _isDemoMode;
+  bool get isDemoMode => _isDemoMode;
   String? get error => _error;
-  String get displayName => _user?.displayName ?? 'Kullanıcı';
-  String get email => _user?.email ?? '';
+  String get displayName => _isDemoMode ? _demoName : (_user?.displayName ?? 'Kullanıcı');
+  String get email => _isDemoMode ? _demoEmail : (_user?.email ?? '');
   String? get photoUrl => _user?.photoURL;
 
   AuthProvider() {
-    // Mevcut oturum varsa kullanıcıyı yükle
-    _user = _auth.currentUser;
+    _initAuth();
+  }
 
-    // Auth state değişikliklerini dinle
-    _auth.authStateChanges().listen((User? user) {
-      _user = user;
-      notifyListeners();
-    });
+  void _initAuth() {
+    try {
+      final auth = FirebaseAuth.instance;
+      _user = auth.currentUser;
+
+      auth.authStateChanges().listen((User? user) {
+        _user = user;
+        notifyListeners();
+      });
+    } catch (e) {
+      debugPrint('Firebase Auth init error: $e');
+    }
   }
 
   /// Google ile giriş yap
@@ -38,17 +49,16 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Google Sign-In akışını başlat
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      final googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) {
-        // Kullanıcı iptal etti
         _isLoading = false;
+        _error = 'Google giriş iptal edildi.';
         notifyListeners();
         return false;
       }
 
-      // Google auth credential al
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
@@ -57,9 +67,9 @@ class AuthProvider extends ChangeNotifier {
         idToken: googleAuth.idToken,
       );
 
-      // Firebase ile giriş yap
+      final auth = FirebaseAuth.instance;
       final UserCredential userCredential =
-          await _auth.signInWithCredential(credential);
+          await auth.signInWithCredential(credential);
       _user = userCredential.user;
 
       _isLoading = false;
@@ -71,11 +81,30 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     } catch (e) {
-      _error = 'Giriş yapılırken bir hata oluştu: ${e.toString()}';
+      // Web'de Google Sign-In çalışmıyor → Demo moda yönlendir
+      _error = 'Google giriş başarısız. Demo mod ile devam edebilirsiniz.';
       _isLoading = false;
       notifyListeners();
       return false;
     }
+  }
+
+  /// Demo mod ile giriş (Firebase olmadan çalışır)
+  Future<bool> signInAsDemo(String name, String businessType) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    // Kısa bir gecikme (UX animasyonu için)
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    _isDemoMode = true;
+    _demoName = name.isEmpty ? 'Demo Kullanıcı' : name;
+    _demoEmail = '$businessType@analizai.demo';
+
+    _isLoading = false;
+    notifyListeners();
+    return true;
   }
 
   /// Çıkış yap
@@ -84,11 +113,14 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await Future.wait([
-        _auth.signOut(),
-        _googleSignIn.signOut(),
-      ]);
+      if (!_isDemoMode) {
+        final auth = FirebaseAuth.instance;
+        await auth.signOut();
+      }
       _user = null;
+      _isDemoMode = false;
+      _demoName = '';
+      _demoEmail = '';
     } catch (e) {
       _error = 'Çıkış yapılırken bir hata oluştu';
     }
