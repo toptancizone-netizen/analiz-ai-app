@@ -16,6 +16,9 @@ class AuthProvider extends ChangeNotifier {
   String _businessType = '';
   String _businessLocation = '';
   String _ownerName = '';
+  String _phone = '';
+  int _employeeCount = 0;
+  int _yearsInBusiness = 0;
 
   User? get user => _user;
   bool get isLoading => _isLoading;
@@ -31,6 +34,9 @@ class AuthProvider extends ChangeNotifier {
   String get businessType => _businessType;
   String get businessLocation => _businessLocation;
   String get ownerName => _ownerName;
+  String get phone => _phone;
+  int get employeeCount => _employeeCount;
+  int get yearsInBusiness => _yearsInBusiness;
 
   AuthProvider() {
     _initAuth();
@@ -98,6 +104,9 @@ class AuthProvider extends ChangeNotifier {
     required String businessName,
     required String businessType,
     required String businessLocation,
+    String phone = '',
+    int employeeCount = 0,
+    int yearsInBusiness = 0,
   }) async {
     _isLoading = true;
     _error = null;
@@ -110,6 +119,9 @@ class AuthProvider extends ChangeNotifier {
     _businessName = businessName.isEmpty ? 'Demo İşletme' : businessName;
     _businessType = businessType;
     _businessLocation = businessLocation.isEmpty ? 'İstanbul' : businessLocation;
+    _phone = phone;
+    _employeeCount = employeeCount;
+    _yearsInBusiness = yearsInBusiness;
 
     _isLoading = false;
     notifyListeners();
@@ -132,6 +144,9 @@ class AuthProvider extends ChangeNotifier {
       _businessName = '';
       _businessType = '';
       _businessLocation = '';
+      _phone = '';
+      _employeeCount = 0;
+      _yearsInBusiness = 0;
     } catch (e) {
       _error = 'Çıkış yapılırken bir hata oluştu';
     }

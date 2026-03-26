@@ -78,7 +78,10 @@ class _LoginScreenState extends State<LoginScreen>
     final ownerNameCtrl = TextEditingController();
     final businessNameCtrl = TextEditingController();
     final locationCtrl = TextEditingController(text: 'İstanbul');
+    final phoneCtrl = TextEditingController();
     String selectedType = 'restoran';
+    int employeeCount = 3;
+    int yearsInBusiness = 1;
 
     showDialog(
       context: context,
@@ -123,6 +126,14 @@ class _LoginScreenState extends State<LoginScreen>
                     icon: Icons.person_rounded,
                   ),
                   const SizedBox(height: 14),
+                  // Telefon
+                  _buildDialogField(
+                    controller: phoneCtrl,
+                    label: 'Telefon',
+                    hint: 'Örn: 0532 123 4567',
+                    icon: Icons.phone_rounded,
+                  ),
+                  const SizedBox(height: 14),
                   // İşletme Adı
                   _buildDialogField(
                     controller: businessNameCtrl,
@@ -151,9 +162,31 @@ class _LoginScreenState extends State<LoginScreen>
                   // Konum
                   _buildDialogField(
                     controller: locationCtrl,
-                    label: 'Konum / İlçe',
+                    label: 'İşletme Konumu',
                     hint: 'Örn: Kadıköy, İstanbul',
                     icon: Icons.location_on_rounded,
+                  ),
+                  const SizedBox(height: 18),
+                  // Çalışan Sayısı
+                  Text('Çalışan Sayısı: $employeeCount kişi', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: Colors.white.withOpacity(0.7))),
+                  Slider(
+                    value: employeeCount.toDouble(),
+                    min: 1, max: 50, divisions: 49,
+                    activeColor: AppTheme.primaryColor,
+                    inactiveColor: AppTheme.darkBorder,
+                    label: '$employeeCount',
+                    onChanged: (v) => setDialogState(() => employeeCount = v.round()),
+                  ),
+                  const SizedBox(height: 8),
+                  // Kaç Yıldır Açık
+                  Text('Kaç yıldır açık: $yearsInBusiness yıl', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: Colors.white.withOpacity(0.7))),
+                  Slider(
+                    value: yearsInBusiness.toDouble(),
+                    min: 0, max: 30, divisions: 30,
+                    activeColor: AppTheme.secondaryColor,
+                    inactiveColor: AppTheme.darkBorder,
+                    label: '$yearsInBusiness',
+                    onChanged: (v) => setDialogState(() => yearsInBusiness = v.round()),
                   ),
                 ],
               ),
@@ -172,6 +205,9 @@ class _LoginScreenState extends State<LoginScreen>
                     businessName: businessNameCtrl.text,
                     businessType: selectedType,
                     businessLocation: locationCtrl.text,
+                    phone: phoneCtrl.text,
+                    employeeCount: employeeCount,
+                    yearsInBusiness: yearsInBusiness,
                   );
                   if (success && mounted) _navigateToDashboard();
                 },

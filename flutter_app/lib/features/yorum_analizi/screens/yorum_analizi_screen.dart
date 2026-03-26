@@ -304,6 +304,13 @@ class _YorumAnaliziScreenState extends State<YorumAnaliziScreen>
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
+    // Demo kullanıcılar yorum analizi yapamaz
+    if (auth.isDemoMode) {
+      return _buildDemoRestrictionScreen(auth);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Yorum Analizi'),
@@ -590,6 +597,142 @@ class _YorumAnaliziScreenState extends State<YorumAnaliziScreen>
           Text(text, style: const TextStyle(fontFamily: 'Inter', fontSize: 14, color: Colors.white70)),
         ]),
       ),
+    );
+  }
+
+  /// Demo modunda yorum analizi kısıtlama ekranı
+  Widget _buildDemoRestrictionScreen(AuthProvider auth) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Yorum Analizi'),
+        backgroundColor: AppTheme.darkBg,
+      ),
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF1a1d42), AppTheme.darkBg],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              // Lock ikon
+              Container(
+                width: 100, height: 100,
+                decoration: BoxDecoration(
+                  color: AppTheme.warningColor.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppTheme.warningColor.withOpacity(0.3), width: 2),
+                ),
+                child: const Icon(Icons.lock_rounded, size: 48, color: AppTheme.warningColor),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Google Yorum Analizi',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Demo modunda Google yorumlarına erişim bulunmamaktadır.\n\nGerçek müşteri yorumlarınızı analiz etmek için Google hesabınızla giriş yapın.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: Colors.white.withOpacity(0.6), height: 1.5),
+              ),
+              const SizedBox(height: 32),
+              // Özellikler listesi
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkCard,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.darkBorder),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('🔓 Google ile giriş yapınca:', style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                    const SizedBox(height: 16),
+                    _buildFeatureRow(Icons.comment_rounded, 'Google yorumlarınız otomatik çekilir'),
+                    const SizedBox(height: 12),
+                    _buildFeatureRow(Icons.psychology_rounded, 'AI ile duygu analizi yapılır (pozitif/negatif/nötr)'),
+                    const SizedBox(height: 12),
+                    _buildFeatureRow(Icons.insights_rounded, 'Müşteri memnuniyet trendi gösterilir'),
+                    const SizedBox(height: 12),
+                    _buildFeatureRow(Icons.lightbulb_rounded, 'Zayıf noktalar ve öneriler sunulur'),
+                    const SizedBox(height: 12),
+                    _buildFeatureRow(Icons.bar_chart_rounded, 'Haftalık/aylık duygu raporu oluşturulur'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Demo bilgi kartı
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.primaryColor.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded, color: AppTheme.primaryColor, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Diğer özellikler (Rakip Analizi, Fiyat Analizi, Kampanya) demo modunda da kullanılabilir.',
+                        style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white.withOpacity(0.7)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Google ile giriş yap butonu
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Google Sign-In için Firebase OAuth yapılandırması gerekli.'),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.g_mobiledata_rounded, size: 28),
+                  label: const Text('Google ile Giriş Yap', style: TextStyle(fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w600)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black87,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: AppTheme.successColor),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(text, style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: Colors.white.withOpacity(0.7))),
+        ),
+      ],
     );
   }
 }
