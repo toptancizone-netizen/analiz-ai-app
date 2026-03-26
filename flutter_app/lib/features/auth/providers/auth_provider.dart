@@ -4,25 +4,33 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 /// Firebase Authentication Provider
-/// Google Sign-In ile giriş/çıkış yönetimi + Demo mod (web geliştirme için)
+/// Google Sign-In ile giriş/çıkış yönetimi + Demo mod
 class AuthProvider extends ChangeNotifier {
   User? _user;
   bool _isLoading = false;
   String? _error;
   bool _isDemoMode = false;
 
-  // Demo kullanıcı bilgileri
-  String _demoName = '';
-  String _demoEmail = '';
+  // İşletme bilgileri (demo mod)
+  String _businessName = '';
+  String _businessType = '';
+  String _businessLocation = '';
+  String _ownerName = '';
 
   User? get user => _user;
   bool get isLoading => _isLoading;
   bool get isLoggedIn => _user != null || _isDemoMode;
   bool get isDemoMode => _isDemoMode;
   String? get error => _error;
-  String get displayName => _isDemoMode ? _demoName : (_user?.displayName ?? 'Kullanıcı');
-  String get email => _isDemoMode ? _demoEmail : (_user?.email ?? '');
+  String get displayName => _isDemoMode ? _ownerName : (_user?.displayName ?? 'Kullanıcı');
+  String get email => _isDemoMode ? '$_businessType@analizai.demo' : (_user?.email ?? '');
   String? get photoUrl => _user?.photoURL;
+
+  // İşletme bilgileri
+  String get businessName => _businessName;
+  String get businessType => _businessType;
+  String get businessLocation => _businessLocation;
+  String get ownerName => _ownerName;
 
   AuthProvider() {
     _initAuth();
@@ -32,7 +40,6 @@ class AuthProvider extends ChangeNotifier {
     try {
       final auth = FirebaseAuth.instance;
       _user = auth.currentUser;
-
       auth.authStateChanges().listen((User? user) {
         _user = user;
         notifyListeners();
@@ -59,17 +66,14 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
       final auth = FirebaseAuth.instance;
-      final UserCredential userCredential =
-          await auth.signInWithCredential(credential);
+      final UserCredential userCredential = await auth.signInWithCredential(credential);
       _user = userCredential.user;
 
       _isLoading = false;
@@ -81,7 +85,6 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     } catch (e) {
-      // Web'de Google Sign-In çalışmıyor → Demo moda yönlendir
       _error = 'Google giriş başarısız. Demo mod ile devam edebilirsiniz.';
       _isLoading = false;
       notifyListeners();
@@ -89,18 +92,24 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Demo mod ile giriş (Firebase olmadan çalışır)
-  Future<bool> signInAsDemo(String name, String businessType) async {
+  /// Demo mod ile giriş
+  Future<bool> signInAsDemo({
+    required String ownerName,
+    required String businessName,
+    required String businessType,
+    required String businessLocation,
+  }) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
-    // Kısa bir gecikme (UX animasyonu için)
-    await Future.delayed(const Duration(milliseconds: 800));
+    await Future.delayed(const Duration(milliseconds: 1000));
 
     _isDemoMode = true;
-    _demoName = name.isEmpty ? 'Demo Kullanıcı' : name;
-    _demoEmail = '$businessType@analizai.demo';
+    _ownerName = ownerName.isEmpty ? 'Demo Kullanıcı' : ownerName;
+    _businessName = businessName.isEmpty ? 'Demo İşletme' : businessName;
+    _businessType = businessType;
+    _businessLocation = businessLocation.isEmpty ? 'İstanbul' : businessLocation;
 
     _isLoading = false;
     notifyListeners();
@@ -119,8 +128,10 @@ class AuthProvider extends ChangeNotifier {
       }
       _user = null;
       _isDemoMode = false;
-      _demoName = '';
-      _demoEmail = '';
+      _ownerName = '';
+      _businessName = '';
+      _businessType = '';
+      _businessLocation = '';
     } catch (e) {
       _error = 'Çıkış yapılırken bir hata oluştu';
     }
@@ -129,27 +140,21 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Hata mesajını temizle
   void clearError() {
     _error = null;
     notifyListeners();
   }
 
-  /// Firebase Auth hata mesajlarını Türkçe'ye çevir
   String _getFirebaseAuthErrorMessage(String code) {
     switch (code) {
       case 'account-exists-with-different-credential':
-        return 'Bu e-posta adresi farklı bir giriş yöntemiyle kayıtlı.';
+        return 'Bu e-posta farklı bir giriş yöntemiyle kayıtlı.';
       case 'invalid-credential':
         return 'Geçersiz kimlik bilgisi.';
       case 'operation-not-allowed':
         return 'Bu giriş yöntemi aktif değil.';
       case 'user-disabled':
         return 'Bu hesap devre dışı bırakılmış.';
-      case 'user-not-found':
-        return 'Kullanıcı bulunamadı.';
-      case 'wrong-password':
-        return 'Hatalı şifre.';
       case 'network-request-failed':
         return 'İnternet bağlantısı yok.';
       default:

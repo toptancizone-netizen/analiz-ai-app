@@ -36,9 +36,7 @@ class _LoginScreenState extends State<LoginScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
-      if (auth.isLoggedIn) {
-        _navigateToDashboard();
-      }
+      if (auth.isLoggedIn) _navigateToDashboard();
     });
   }
 
@@ -57,7 +55,6 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _handleGoogleSignIn() async {
     final auth = context.read<AuthProvider>();
     final success = await auth.signInWithGoogle();
-
     if (success && mounted) {
       _navigateToDashboard();
     } else if (auth.error != null && mounted) {
@@ -78,116 +75,149 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   void _showDemoLoginDialog() {
-    final nameController = TextEditingController(text: 'Demo İşletme');
+    final ownerNameCtrl = TextEditingController();
+    final businessNameCtrl = TextEditingController();
+    final locationCtrl = TextEditingController(text: 'İstanbul');
     String selectedType = 'restoran';
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) {
           return AlertDialog(
             backgroundColor: AppTheme.darkCard,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Text(
-              'Demo Giriş',
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
+            title: Row(
               children: [
-                Text(
-                  'Firebase yapılandırması tamamlanana kadar demo mod ile devam edin.',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontFamily: 'Inter',
-                    fontSize: 13,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.primaryGradient,
+                    borderRadius: BorderRadius.circular(10),
                   ),
+                  child: const Icon(Icons.rocket_launch, color: Colors.white, size: 20),
                 ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: nameController,
-                  style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
-                  decoration: InputDecoration(
-                    labelText: 'İşletme Adı',
-                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                    prefixIcon: const Icon(Icons.store, color: AppTheme.secondaryColor),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppTheme.darkBorder),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppTheme.primaryColor),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: selectedType,
-                  dropdownColor: AppTheme.darkCard,
-                  style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
-                  decoration: InputDecoration(
-                    labelText: 'İşletme Türü',
-                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                    prefixIcon: const Icon(Icons.category, color: AppTheme.secondaryColor),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppTheme.darkBorder),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppTheme.primaryColor),
-                    ),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'restoran', child: Text('🍽️ Restoran')),
-                    DropdownMenuItem(value: 'kafe', child: Text('☕ Kafe')),
-                    DropdownMenuItem(value: 'market', child: Text('🛒 Market')),
-                    DropdownMenuItem(value: 'kuafor', child: Text('💇 Kuaför')),
-                    DropdownMenuItem(value: 'eczane', child: Text('💊 Eczane')),
-                    DropdownMenuItem(value: 'diger', child: Text('🏪 Diğer')),
-                  ],
-                  onChanged: (val) => setDialogState(() => selectedType = val ?? 'restoran'),
+                const SizedBox(width: 12),
+                const Text(
+                  'Hadi Başlayalım!',
+                  style: TextStyle(color: Colors.white, fontFamily: 'Inter', fontWeight: FontWeight.w700, fontSize: 18),
                 ),
               ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'İşletmenizi tanıyalım, size özel bir analiz hazırlayalım.',
+                    style: TextStyle(color: Colors.white.withOpacity(0.6), fontFamily: 'Inter', fontSize: 13),
+                  ),
+                  const SizedBox(height: 20),
+                  // Ad Soyad
+                  _buildDialogField(
+                    controller: ownerNameCtrl,
+                    label: 'Adınız Soyadınız',
+                    hint: 'Örn: Ahmet Yılmaz',
+                    icon: Icons.person_rounded,
+                  ),
+                  const SizedBox(height: 14),
+                  // İşletme Adı
+                  _buildDialogField(
+                    controller: businessNameCtrl,
+                    label: 'İşletme Adı',
+                    hint: 'Örn: Lezzet Dünyası',
+                    icon: Icons.store_rounded,
+                  ),
+                  const SizedBox(height: 14),
+                  // İşletme Türü
+                  DropdownButtonFormField<String>(
+                    value: selectedType,
+                    dropdownColor: AppTheme.darkCard,
+                    style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+                    decoration: _inputDecoration('İşletme Türü', Icons.category_rounded),
+                    items: const [
+                      DropdownMenuItem(value: 'restoran', child: Text('🍽️  Restoran / Lokanta')),
+                      DropdownMenuItem(value: 'kafe', child: Text('☕  Kafe / Kahveci')),
+                      DropdownMenuItem(value: 'market', child: Text('🛒  Market / Bakkal')),
+                      DropdownMenuItem(value: 'kuafor', child: Text('💇  Kuaför / Güzellik')),
+                      DropdownMenuItem(value: 'eczane', child: Text('💊  Eczane')),
+                      DropdownMenuItem(value: 'diger', child: Text('🏪  Diğer')),
+                    ],
+                    onChanged: (val) => setDialogState(() => selectedType = val ?? 'restoran'),
+                  ),
+                  const SizedBox(height: 14),
+                  // Konum
+                  _buildDialogField(
+                    controller: locationCtrl,
+                    label: 'Konum / İlçe',
+                    hint: 'Örn: Kadıköy, İstanbul',
+                    icon: Icons.location_on_rounded,
+                  ),
+                ],
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text(
-                  'İptal',
-                  style: TextStyle(color: Colors.white.withOpacity(0.5)),
-                ),
+                child: Text('İptal', style: TextStyle(color: Colors.white.withOpacity(0.5))),
               ),
-              ElevatedButton(
+              ElevatedButton.icon(
                 onPressed: () async {
                   Navigator.pop(ctx);
                   final auth = context.read<AuthProvider>();
                   final success = await auth.signInAsDemo(
-                    nameController.text,
-                    selectedType,
+                    ownerName: ownerNameCtrl.text,
+                    businessName: businessNameCtrl.text,
+                    businessType: selectedType,
+                    businessLocation: locationCtrl.text,
                   );
-                  if (success && mounted) {
-                    _navigateToDashboard();
-                  }
+                  if (success && mounted) _navigateToDashboard();
                 },
+                icon: const Icon(Icons.auto_awesome, size: 18),
+                label: const Text('Analiz Et', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Giriş Yap', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600)),
               ),
             ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildDialogField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+  }) {
+    return TextField(
+      controller: controller,
+      style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+      decoration: _inputDecoration(label, icon).copyWith(hintText: hint, hintStyle: TextStyle(color: Colors.white.withOpacity(0.25))),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Colors.white.withOpacity(0.5), fontFamily: 'Inter', fontSize: 13),
+      prefixIcon: Icon(icon, color: AppTheme.secondaryColor, size: 20),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppTheme.darkBorder),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppTheme.primaryColor),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 
@@ -199,11 +229,7 @@ class _LoginScreenState extends State<LoginScreen>
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              AppTheme.darkBg,
-              Color(0xFF13163F),
-              AppTheme.darkBg,
-            ],
+            colors: [AppTheme.darkBg, Color(0xFF13163F), AppTheme.darkBg],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -245,53 +271,25 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildLogo() {
     return Container(
-      width: 100,
-      height: 100,
+      width: 100, height: 100,
       decoration: BoxDecoration(
         gradient: AppTheme.primaryGradient,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.4),
-            blurRadius: 30,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: AppTheme.primaryColor.withOpacity(0.4), blurRadius: 30, offset: const Offset(0, 10))],
       ),
-      child: const Icon(
-        Icons.analytics_rounded,
-        size: 50,
-        color: Colors.white,
-      ),
+      child: const Icon(Icons.analytics_rounded, size: 50, color: Colors.white),
     );
   }
 
   Widget _buildTitle() {
     return ShaderMask(
       shaderCallback: (bounds) => AppTheme.accentGradient.createShader(bounds),
-      child: const Text(
-        'AnalizAI',
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 40,
-          fontWeight: FontWeight.w900,
-          color: Colors.white,
-          letterSpacing: -1,
-        ),
-      ),
+      child: const Text('AnalizAI', style: TextStyle(fontFamily: 'Inter', fontSize: 40, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -1)),
     );
   }
 
   Widget _buildSubtitle() {
-    return Text(
-      'İşletmenizi AI ile güçlendirin',
-      style: TextStyle(
-        fontFamily: 'Inter',
-        fontSize: 16,
-        color: Colors.white.withOpacity(0.6),
-        fontWeight: FontWeight.w400,
-      ),
-    );
+    return Text('İşletmenizi AI ile güçlendirin', style: TextStyle(fontFamily: 'Inter', fontSize: 16, color: Colors.white.withOpacity(0.6)));
   }
 
   Widget _buildFeatureChips() {
@@ -301,140 +299,63 @@ class _LoginScreenState extends State<LoginScreen>
       {'icon': Icons.attach_money_rounded, 'text': 'Fiyat Önerisi'},
       {'icon': Icons.campaign_rounded, 'text': 'Kampanya Önerisi'},
     ];
-
     return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 8,
-      runSpacing: 8,
-      children: features.map((f) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppTheme.darkCard.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppTheme.darkBorder),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                f['icon'] as IconData,
-                size: 16,
-                color: AppTheme.secondaryColor,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                f['text'] as String,
-                style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white70,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+      alignment: WrapAlignment.center, spacing: 8, runSpacing: 8,
+      children: features.map((f) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppTheme.darkCard.withOpacity(0.7),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.darkBorder),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(f['icon'] as IconData, size: 16, color: AppTheme.secondaryColor),
+          const SizedBox(width: 6),
+          Text(f['text'] as String, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70)),
+        ]),
+      )).toList(),
     );
   }
 
   Widget _buildGoogleSignInButton() {
-    return Consumer<AuthProvider>(
-      builder: (context, auth, _) {
-        return SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: auth.isLoading ? null : _handleGoogleSignIn,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black87,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: auth.isLoading
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: AppTheme.primaryColor,
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Icon(
-                          Icons.g_mobiledata_rounded,
-                          color: Color(0xFF4285F4),
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'Google ile Giriş Yap',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        );
-      },
-    );
+    return Consumer<AuthProvider>(builder: (context, auth, _) {
+      return SizedBox(
+        width: double.infinity, height: 56,
+        child: ElevatedButton(
+          onPressed: auth.isLoading ? null : _handleGoogleSignIn,
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.black87, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+          child: auth.isLoading
+              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.primaryColor))
+              : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  const Icon(Icons.g_mobiledata_rounded, color: Color(0xFF4285F4), size: 28),
+                  const SizedBox(width: 12),
+                  const Text('Google ile Giriş Yap', style: TextStyle(fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w600)),
+                ]),
+        ),
+      );
+    });
   }
 
   Widget _buildDemoButton() {
-    return Consumer<AuthProvider>(
-      builder: (context, auth, _) {
-        return SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: OutlinedButton.icon(
-            onPressed: auth.isLoading ? null : _showDemoLoginDialog,
-            icon: const Icon(Icons.rocket_launch_rounded, size: 18),
-            label: const Text(
-              'Demo ile Keşfet',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppTheme.secondaryColor,
-              side: BorderSide(color: AppTheme.secondaryColor.withOpacity(0.4)),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
+    return Consumer<AuthProvider>(builder: (context, auth, _) {
+      return SizedBox(
+        width: double.infinity, height: 48,
+        child: OutlinedButton.icon(
+          onPressed: auth.isLoading ? null : _showDemoLoginDialog,
+          icon: const Icon(Icons.rocket_launch_rounded, size: 18),
+          label: const Text('Demo ile Keşfet', style: TextStyle(fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w500)),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppTheme.secondaryColor,
+            side: BorderSide(color: AppTheme.secondaryColor.withOpacity(0.4)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
-        );
-      },
-    );
+        ),
+      );
+    });
   }
 
   Widget _buildTermsText() {
-    return Text(
-      'Giriş yaparak Kullanım Koşullarını kabul edersiniz.',
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        fontFamily: 'Inter',
-        fontSize: 11,
-        color: Colors.white.withOpacity(0.35),
-      ),
-    );
+    return Text('Giriş yaparak Kullanım Koşullarını kabul edersiniz.', textAlign: TextAlign.center,
+      style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: Colors.white.withOpacity(0.35)));
   }
 }
