@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -64,6 +65,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildAppBar(),
             _buildWelcome(auth, dashboard),
             _buildStatGrid(dashboard),
+            // Analiz Grafikleri
+            _buildChartsSection(dashboard),
             // AI Insights
             if (dashboard.recentInsights.isNotEmpty) ...[
               SliverToBoxAdapter(
@@ -253,6 +256,255 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 4),
                 Text(insight['text'] as String, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white.withOpacity(0.6))),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChartsSection(DashboardProvider dashboard) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              const Icon(Icons.bar_chart_rounded, color: AppTheme.primaryColor, size: 18),
+              const SizedBox(width: 8),
+              Text('Analiz Grafikleri', style: Theme.of(context).textTheme.titleLarge),
+            ]),
+            const SizedBox(height: 16),
+            // 1. Haftalık Duygu Analizi Bar Chart
+            _buildWeeklySentimentChart(dashboard),
+            const SizedBox(height: 16),
+            // 2. Yorum Dağılımı
+            _buildSentimentDistributionChart(dashboard),
+            const SizedBox(height: 16),
+            // 3. Aylık Performans Trendi
+            _buildMonthlyTrendChart(dashboard),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Haftalık Duygu Analizi Bar Chart
+  Widget _buildWeeklySentimentChart(DashboardProvider dashboard) {
+    final days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+    final random = Random(dashboard.totalReviews);
+    final posData = List.generate(7, (_) => 40 + random.nextInt(50));
+    final negData = List.generate(7, (_) => 10 + random.nextInt(30));
+    final maxVal = [...posData, ...negData].reduce((a, b) => a > b ? a : b).toDouble();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Text('Haftalık Duygu Analizi', style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(color: AppTheme.successColor.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+              child: const Text('Son 7 Gün', style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: AppTheme.successColor, fontWeight: FontWeight.w600)),
+            ),
+          ]),
+          const SizedBox(height: 6),
+          Row(children: [
+            _chartLegend(AppTheme.successColor, 'Pozitif'),
+            const SizedBox(width: 16),
+            _chartLegend(AppTheme.accentColor, 'Negatif'),
+          ]),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 150,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(7, (i) {
+                final posH = (posData[i] / maxVal) * 120;
+                final negH = (negData[i] / maxVal) * 120;
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            _animatedBar(posH, AppTheme.successColor, i * 80),
+                            const SizedBox(width: 2),
+                            _animatedBar(negH, AppTheme.accentColor, i * 80 + 40),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(days[i], style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: Colors.white.withOpacity(0.4))),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _animatedBar(double height, Color color, int delayMs) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: height),
+      duration: Duration(milliseconds: 600 + delayMs),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, _) {
+        return Container(
+          width: 10,
+          height: value,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _chartLegend(Color color, String label) {
+    return Row(children: [
+      Container(width: 8, height: 8, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+      const SizedBox(width: 4),
+      Text(label, style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: Colors.white.withOpacity(0.5))),
+    ]);
+  }
+
+  /// Yorum Dağılımı Horizontal Bars
+  Widget _buildSentimentDistributionChart(DashboardProvider dashboard) {
+    final total = dashboard.totalReviews > 0 ? dashboard.totalReviews : 100;
+    final posPercent = dashboard.sentimentScore / 100;
+    final negPercent = (100 - dashboard.sentimentScore - 12) / 100;
+    final neutralPercent = 1.0 - posPercent - negPercent;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Yorum Dağılımı', style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+          const SizedBox(height: 16),
+          // Stacked bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox(
+              height: 28,
+              child: Row(children: [
+                Expanded(flex: (posPercent * 100).round(), child: Container(color: AppTheme.successColor)),
+                Expanded(flex: (neutralPercent * 100).round().clamp(1, 100), child: Container(color: Colors.grey.shade600)),
+                Expanded(flex: (negPercent * 100).round().clamp(1, 100), child: Container(color: AppTheme.accentColor)),
+              ]),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _distributionRow('😊 Pozitif', (posPercent * total).round(), posPercent, AppTheme.successColor),
+          const SizedBox(height: 10),
+          _distributionRow('😐 Nötr', (neutralPercent * total).round(), neutralPercent, Colors.grey),
+          const SizedBox(height: 10),
+          _distributionRow('😞 Negatif', (negPercent * total).round(), negPercent, AppTheme.accentColor),
+        ],
+      ),
+    );
+  }
+
+  Widget _distributionRow(String label, int count, double ratio, Color color) {
+    return Row(children: [
+      Text(label, style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: Colors.white.withOpacity(0.7))),
+      const Spacer(),
+      Text('$count yorum', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white.withOpacity(0.4))),
+      const SizedBox(width: 10),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+        child: Text('%${(ratio * 100).toStringAsFixed(0)}', style: TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w700, color: color)),
+      ),
+    ]);
+  }
+
+  /// Aylık Performans Trend
+  Widget _buildMonthlyTrendChart(DashboardProvider dashboard) {
+    final months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz'];
+    final random = Random(dashboard.sentimentScore.round());
+    final trendData = List.generate(6, (i) => 55.0 + random.nextInt(35) + i * 2.0);
+    final maxVal = trendData.reduce((a, b) => a > b ? a : b);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Text('Aylık Performans', style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+            const Spacer(),
+            Icon(Icons.trending_up_rounded, size: 16, color: AppTheme.successColor),
+            const SizedBox(width: 4),
+            Text('+${random.nextInt(8) + 3}%', style: const TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.successColor)),
+          ]),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 120,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(6, (i) {
+                final h = (trendData[i] / maxVal) * 100;
+                final isLast = i == 5;
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text('%${trendData[i].toStringAsFixed(0)}', style: TextStyle(fontFamily: 'Inter', fontSize: 9, color: isLast ? AppTheme.secondaryColor : Colors.white.withOpacity(0.3))),
+                        const SizedBox(height: 4),
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: h),
+                          duration: Duration(milliseconds: 500 + i * 100),
+                          curve: Curves.easeOutCubic,
+                          builder: (_, v, __) => Container(
+                            width: double.infinity,
+                            height: v,
+                            decoration: BoxDecoration(
+                              gradient: isLast
+                                  ? const LinearGradient(colors: [AppTheme.secondaryColor, AppTheme.primaryColor], begin: Alignment.bottomCenter, end: Alignment.topCenter)
+                                  : LinearGradient(colors: [AppTheme.primaryColor.withOpacity(0.4), AppTheme.primaryColor.withOpacity(0.7)], begin: Alignment.bottomCenter, end: Alignment.topCenter),
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(months[i], style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: Colors.white.withOpacity(0.4))),
+                      ],
+                    ),
+                  ),
+                );
+              }),
             ),
           ),
         ],

@@ -79,6 +79,7 @@ class _LoginScreenState extends State<LoginScreen>
     final businessNameCtrl = TextEditingController();
     final locationCtrl = TextEditingController(text: 'İstanbul');
     final phoneCtrl = TextEditingController();
+    final addressCtrl = TextEditingController();
     String selectedType = 'restoran';
     int employeeCount = 3;
     int yearsInBusiness = 1;
@@ -166,6 +167,17 @@ class _LoginScreenState extends State<LoginScreen>
                     hint: 'Örn: Kadıköy, İstanbul',
                     icon: Icons.location_on_rounded,
                   ),
+                  const SizedBox(height: 14),
+                  // Açık Adres
+                  TextField(
+                    controller: addressCtrl,
+                    maxLines: 2,
+                    style: const TextStyle(color: Colors.white, fontFamily: 'Inter', fontSize: 14),
+                    decoration: _inputDecoration('Açık Adres', Icons.home_rounded).copyWith(
+                      hintText: 'Örn: Caferlı Mah. Güneş Sok. No:12/A',
+                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.25)),
+                    ),
+                  ),
                   const SizedBox(height: 18),
                   // Çalışan Sayısı
                   Text('Çalışan Sayısı: $employeeCount kişi', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: Colors.white.withOpacity(0.7))),
@@ -206,6 +218,7 @@ class _LoginScreenState extends State<LoginScreen>
                     businessType: selectedType,
                     businessLocation: locationCtrl.text,
                     phone: phoneCtrl.text,
+                    fullAddress: addressCtrl.text,
                     employeeCount: employeeCount,
                     yearsInBusiness: yearsInBusiness,
                   );

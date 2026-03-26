@@ -17,6 +17,7 @@ class AuthProvider extends ChangeNotifier {
   String _businessLocation = '';
   String _ownerName = '';
   String _phone = '';
+  String _fullAddress = '';
   int _employeeCount = 0;
   int _yearsInBusiness = 0;
 
@@ -35,6 +36,7 @@ class AuthProvider extends ChangeNotifier {
   String get businessLocation => _businessLocation;
   String get ownerName => _ownerName;
   String get phone => _phone;
+  String get fullAddress => _fullAddress;
   int get employeeCount => _employeeCount;
   int get yearsInBusiness => _yearsInBusiness;
 
@@ -105,6 +107,7 @@ class AuthProvider extends ChangeNotifier {
     required String businessType,
     required String businessLocation,
     String phone = '',
+    String fullAddress = '',
     int employeeCount = 0,
     int yearsInBusiness = 0,
   }) async {
@@ -120,6 +123,7 @@ class AuthProvider extends ChangeNotifier {
     _businessType = businessType;
     _businessLocation = businessLocation.isEmpty ? 'İstanbul' : businessLocation;
     _phone = phone;
+    _fullAddress = fullAddress;
     _employeeCount = employeeCount;
     _yearsInBusiness = yearsInBusiness;
 
@@ -145,6 +149,7 @@ class AuthProvider extends ChangeNotifier {
       _businessType = '';
       _businessLocation = '';
       _phone = '';
+      _fullAddress = '';
       _employeeCount = 0;
       _yearsInBusiness = 0;
     } catch (e) {
