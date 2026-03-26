@@ -279,14 +279,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // 1. Müşteri Memnuniyet Trendi — Line Chart (en üstte)
             _buildLineChart(dashboard),
             const SizedBox(height: 16),
-            // 2. Haftalık Duygu Analizi Bar Chart
-            _buildWeeklySentimentChart(dashboard),
-            const SizedBox(height: 16),
-            // 3. Yorum Dağılımı
-            _buildSentimentDistributionChart(dashboard),
-            const SizedBox(height: 16),
-            // 4. Aylık Performans Trendi
-            _buildMonthlyTrendChart(dashboard),
+            // 2. Yorum Dağılımı + Aylık Performans — aynı satırda, kare
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: _buildSentimentDistributionChart(dashboard)),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildMonthlyTrendChart(dashboard)),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
           ],
         ),
