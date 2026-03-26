@@ -64,9 +64,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           slivers: [
             _buildAppBar(),
             _buildWelcome(auth, dashboard),
-            _buildStatGrid(dashboard),
-            // Analiz Grafikleri
+            // Analiz Grafikleri (en üstte)
             _buildChartsSection(dashboard),
+            _buildStatGrid(dashboard),
             // AI Insights
             if (dashboard.recentInsights.isNotEmpty) ...[
               SliverToBoxAdapter(
@@ -276,17 +276,109 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text('Analiz Grafikleri', style: Theme.of(context).textTheme.titleLarge),
             ]),
             const SizedBox(height: 16),
-            // 1. Haftalık Duygu Analizi Bar Chart
+            // 1. Müşteri Memnuniyet Trendi — Line Chart (en üstte)
+            _buildLineChart(dashboard),
+            const SizedBox(height: 16),
+            // 2. Haftalık Duygu Analizi Bar Chart
             _buildWeeklySentimentChart(dashboard),
             const SizedBox(height: 16),
-            // 2. Yorum Dağılımı
+            // 3. Yorum Dağılımı
             _buildSentimentDistributionChart(dashboard),
             const SizedBox(height: 16),
-            // 3. Aylık Performans Trendi
+            // 4. Aylık Performans Trendi
             _buildMonthlyTrendChart(dashboard),
             const SizedBox(height: 16),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Müşteri Memnuniyet Trendi — Line Chart with CustomPaint
+  Widget _buildLineChart(DashboardProvider dashboard) {
+    final random = Random(dashboard.totalReviews + 7);
+    final dataPoints = List.generate(12, (i) => 50.0 + random.nextInt(40) + (i * 1.5));
+    final labels = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+    final currentMonth = 3; // Mart
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.darkBorder),
+        boxShadow: [
+          BoxShadow(color: AppTheme.primaryColor.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                gradient: AppTheme.primaryGradient,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.show_chart_rounded, color: Colors.white, size: 16),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text('Müşteri Memnuniyet Trendi', style: TextStyle(fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(color: AppTheme.successColor.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.trending_up_rounded, size: 12, color: AppTheme.successColor),
+                const SizedBox(width: 3),
+                Text('+${random.nextInt(6) + 4}%', style: const TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.successColor)),
+              ]),
+            ),
+          ]),
+          const SizedBox(height: 6),
+          Text('12 aylık memnuniyet oranı (%)', style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: Colors.white.withOpacity(0.4))),
+          const SizedBox(height: 16),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 1200),
+            curve: Curves.easeOutCubic,
+            builder: (context, animValue, _) {
+              return SizedBox(
+                height: 180,
+                child: CustomPaint(
+                  size: const Size(double.infinity, 180),
+                  painter: _LineChartPainter(
+                    dataPoints: dataPoints,
+                    animationValue: animValue,
+                    lineColor: AppTheme.primaryColor,
+                    fillColor: AppTheme.primaryColor.withOpacity(0.08),
+                    dotColor: AppTheme.secondaryColor,
+                    currentIndex: currentMonth - 1,
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          // Month labels
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(12, (i) {
+              final isCurrent = i == currentMonth - 1;
+              return Text(
+                labels[i],
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 8,
+                  fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w400,
+                  color: isCurrent ? AppTheme.secondaryColor : Colors.white.withOpacity(0.3),
+                ),
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
@@ -634,5 +726,117 @@ class _DashboardScreenState extends State<DashboardScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       onTap: () { setState(() => _currentIndex = index); Navigator.pop(context); },
     );
+  }
+}
+
+/// Custom Line Chart Painter — Smooth Bezier curves
+class _LineChartPainter extends CustomPainter {
+  final List<double> dataPoints;
+  final double animationValue;
+  final Color lineColor;
+  final Color fillColor;
+  final Color dotColor;
+  final int currentIndex;
+
+  _LineChartPainter({
+    required this.dataPoints,
+    required this.animationValue,
+    required this.lineColor,
+    required this.fillColor,
+    required this.dotColor,
+    required this.currentIndex,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (dataPoints.isEmpty) return;
+
+    final minVal = dataPoints.reduce((a, b) => a < b ? a : b) - 5;
+    final maxVal = dataPoints.reduce((a, b) => a > b ? a : b) + 5;
+    final range = maxVal - minVal;
+
+    final w = size.width;
+    final h = size.height;
+    final stepX = w / (dataPoints.length - 1);
+
+    // Grid lines
+    final gridPaint = Paint()
+      ..color = const Color(0x0DFFFFFF)
+      ..strokeWidth = 1;
+    for (int i = 0; i < 4; i++) {
+      final y = h * i / 3;
+      canvas.drawLine(Offset(0, y), Offset(w, y), gridPaint);
+    }
+
+    // Calculate points
+    final points = <Offset>[];
+    for (int i = 0; i < dataPoints.length; i++) {
+      final x = i * stepX;
+      final normalizedY = (dataPoints[i] - minVal) / range;
+      final y = h - (normalizedY * h * animationValue);
+      points.add(Offset(x, y));
+    }
+
+    // Draw fill path
+    final fillPath = Path();
+    fillPath.moveTo(0, h);
+    fillPath.lineTo(points[0].dx, points[0].dy);
+    for (int i = 0; i < points.length - 1; i++) {
+      final cp1x = points[i].dx + stepX * 0.4;
+      final cp1y = points[i].dy;
+      final cp2x = points[i + 1].dx - stepX * 0.4;
+      final cp2y = points[i + 1].dy;
+      fillPath.cubicTo(cp1x, cp1y, cp2x, cp2y, points[i + 1].dx, points[i + 1].dy);
+    }
+    fillPath.lineTo(w, h);
+    fillPath.close();
+
+    final fillGradient = Paint()
+      ..shader = LinearGradient(
+        colors: [fillColor, fillColor.withOpacity(0.0)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, 0, w, h));
+    canvas.drawPath(fillPath, fillGradient);
+
+    // Draw line
+    final linePath = Path();
+    linePath.moveTo(points[0].dx, points[0].dy);
+    for (int i = 0; i < points.length - 1; i++) {
+      final cp1x = points[i].dx + stepX * 0.4;
+      final cp1y = points[i].dy;
+      final cp2x = points[i + 1].dx - stepX * 0.4;
+      final cp2y = points[i + 1].dy;
+      linePath.cubicTo(cp1x, cp1y, cp2x, cp2y, points[i + 1].dx, points[i + 1].dy);
+    }
+
+    final linePaint = Paint()
+      ..color = lineColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(linePath, linePaint);
+
+    // Draw dots
+    for (int i = 0; i < points.length; i++) {
+      final isCurrent = i == currentIndex;
+      final dotRadius = isCurrent ? 5.0 : 2.5;
+      final color = isCurrent ? dotColor : lineColor.withOpacity(0.6);
+
+      if (isCurrent) {
+        // Glow effect
+        canvas.drawCircle(points[i], 10, Paint()..color = dotColor.withOpacity(0.15));
+        canvas.drawCircle(points[i], 7, Paint()..color = dotColor.withOpacity(0.2));
+      }
+      canvas.drawCircle(points[i], dotRadius, Paint()..color = color);
+      if (isCurrent) {
+        canvas.drawCircle(points[i], dotRadius - 1.5, Paint()..color = const Color(0xFFFFFFFF));
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _LineChartPainter oldDelegate) {
+    return oldDelegate.animationValue != animationValue;
   }
 }
